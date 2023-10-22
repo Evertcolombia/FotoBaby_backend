@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  _db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - C:\volumes:/var/lib/postgresql/data/pgdata
+    env_file:
+      - C:\Users\FotoBaby_backend\.env.dev
+
+  _pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:5050"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - _db
+    env_file:
+      - C:\Users\FotoBaby_backend\.env.dev
+
+  _backend:
+    ports:
+      - "8888:8888"
+    volumes:
+      - C:\Users\FotoBaby_backend:/code
+    env_file:
+      - C:\Users\FotoBaby_backend\.env.dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - _db
+    command: bash -c "while true; do sleep 1; done"  # Infinite loop to keep container live doing nothing
+volumes:
+  pgadmin-data:
