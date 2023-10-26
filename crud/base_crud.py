@@ -3,6 +3,7 @@ from typing                         import Any, Dict, Generic, List, Type
 from tortoise.query_utils           import Prefetch
 from tortoise.contrib.pydantic.base import PydanticModel
 from tortoise.queryset              import QuerySet
+from tortoise.contrib.pydantic      import pydantic_model_creator, pydantic_queryset_creator
 # local imports
 from schemas.general                import CreateSchemaType, ModelType, UpdateSchemaType
 
@@ -20,6 +21,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Initializes the CRUDBase class.
         """
         self.model : ModelType = model
+        self.model_serializer = pydantic_model_creator(self.model)
+        self.model_list_serializer = pydantic_queryset_creator(self.model)
 
 
     async def get_all(
@@ -29,7 +32,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         skip    : int                  = 0,
         limit   : int                  = 10,
         prefetch: dict[str, ModelType] = None
-    ) -> List[ModelType]:
+    ) -> List[dict]:
         """Retrieve a list of objects based on the provided filter.
 
         Args:
@@ -49,8 +52,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                     Prefetch(column_name, queryset=model_name.all())
                 )
 
-        objs = await query.all()
+        objs = await self.model_list_serializer.from_queryset(query.all())
 
+        serialized_objs = objs.model_dump_json()
         return objs
 
 
@@ -112,9 +116,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             PydanticModel: The Object-Tortoise representation of the retrieved object.
         """
 
-        objs: ModelType = await self.model.get_or_none(id=id)
+        obj = await self.model.get_or_none(id=id)
 
-        return objs
+        if obj:
+            obj = await self.model_serializer.from_tortoise_orm(obj)
+            obj = obj.model_dump_json()
+
+        return obj
 
     async def count(self, *, payload: Dict[str, Any] = {}) -> int:
         """Count the number of objects based on the provided filter.

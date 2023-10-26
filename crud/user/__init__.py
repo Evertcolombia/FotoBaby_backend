@@ -1,3 +1,3 @@
 """
 """
-from .crud_user import CRUDUser
+from .user_crud import CRUDUser
