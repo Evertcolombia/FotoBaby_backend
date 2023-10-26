@@ -5,7 +5,7 @@
 from crud.base_crud import CRUDBase
 from schemas.user   import UserCreate, UserUpdate
 from models.user    import UserModel, UserTypeModel
-from core      import Security
+from core.security  import Security
 
 
 class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
