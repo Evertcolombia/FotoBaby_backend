@@ -27,17 +27,18 @@ class UserBase(BaseModel):
     email        : Optional[EmailStr] = None
     adress       : Optional[str]      = None
     phone_number : Optional[str]      = None
-
+    user_type_id : Optional[int]      = None
 
 class UserCreate(UserBase):
     """
     Properties to receive via API on creation
     """
-    email          : EmailStr
-    user_type_id   : int
-    hashed_password: Optional[str]
-    added_on       : datetime
-    added_by       : str
+    email            : EmailStr
+    user_type_id     : int
+    hashed_password  : Optional[str]
+    verification_link: Optional[str]
+    added_on         : datetime
+    added_by         : str
 
 
 class UserUpdate(UserBase):
@@ -45,6 +46,7 @@ class UserUpdate(UserBase):
     Properties to receive via API on update
     """
     hashed_password: Optional[str]
+    is_active      : Optional[bool]
     changed_on     : Optional[datetime]
     changed_by     : Optional[str]
 
@@ -54,7 +56,6 @@ class UserUpdateForAdmin(UserBase):
     Properties to receive via API on update
     from admin users to employees
     """
-    user_type_id: Optional[datetime]
     changed_on  : Optional[datetime]
     changed_by  : Optional[str]
 
@@ -89,6 +90,16 @@ class User(UserInDBBase):
     added_by  : Optional[str]
     changed_on: Optional[datetime]
     changed_by: Optional[str]
+
+
+
+class UserNew(BaseModel):
+    """
+    Additional properties to return via API
+    """
+    id          : int
+    email       : EmailStr
+    user_type_id: int
 
 
 class UserInDB(UserInDBBase):
