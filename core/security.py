@@ -103,7 +103,7 @@ class Security():
         to_encode = {"exp": expire, "sub": json.dumps(subject)}
         encoded_jwt = jwt.encode(
             to_encode,
-            settings.SECRET_KEY,
+            settings.USER_HASHED_PASSWORD,
             algorithm=self._ALGORITHM
         )
 

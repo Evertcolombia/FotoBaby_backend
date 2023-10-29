@@ -19,4 +19,4 @@ class UserTypesEnum(str, Enum):
     """
     SUPERADMIN = 1
     ADMIN      = 2
-    EMPLOOYE   = 3
+    SELLER     = 3
