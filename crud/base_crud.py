@@ -32,7 +32,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         skip    : int                  = 0,
         limit   : int                  = 10,
         prefetch: dict[str, ModelType] = None
-    ) -> List[dict]:
+    ) -> List[PydanticModel]:
         """Retrieve a list of objects based on the provided filter.
 
         Args:
@@ -53,13 +53,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 )
 
         objs = await self.model_list_serializer.from_queryset(query.all())
-
-        serialized_objs = objs.model_dump_json()
         return objs
 
 
 
-    async def create(self, *, obj_in: CreateSchemaType) -> ModelType:
+    async def create(self, *, obj_in: CreateSchemaType) -> PydanticModel:
         """Create a new object with the provided data.
 
         Args:
@@ -70,11 +68,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
 
         obj: ModelType = await self.model.create(**obj_in.dict())
-        return obj
+        serialized_obj = await self.model_serializer.from_tortoise_orm(obj)
+        return serialized_obj
 
 
-
-    async def update(self, *, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelType:
+    async def update(self, *, db_obj: ModelType, obj_in: UpdateSchemaType) -> PydanticModel:
         """Update an existing object with the provided data.
 
         Args:
@@ -89,7 +87,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db_obj.update_from_dict(obj_in.dict(exclude_unset=True)).save()
 
         # get the updated object
-        updated_obj : PydanticModel = await self.get_by_id(id=db_obj.id)
+        updated_obj = await self.get_by_id(id=db_obj.id)
         return updated_obj
 
 
@@ -106,7 +104,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         delete: int = await db_obj.delete()
         return delete
 
-    async def get_by_id(self, *, id: int) -> ModelType:
+    async def get_by_id(self, *, id: int) -> PydanticModel:
         """Retrieve an object by its ID.
 
         Args:
@@ -117,11 +115,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
 
         obj = await self.model.get_or_none(id=id)
-
-        if obj:
-            obj = await self.model_serializer.from_tortoise_orm(obj)
-            obj = obj.model_dump_json()
-
         return obj
 
     async def count(self, *, payload: Dict[str, Any] = {}) -> int:
